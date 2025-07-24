@@ -2,7 +2,7 @@
 
 🎥 ***Bu projede kaggle sitesinden 1M+ veri bulunan [film veriseti](https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies) kullanıldı.***
 
-📽️ **Linq sorguları kullanırak veriseti üzerinden *Film Türleri, En Yüksek Puanlı Filmler* vb. istatistikleri gösterildi.***
+📽️ **Linq sorguları kullanırak veriseti üzerinden *Film Türleri, En Yüksek Puanlı Filmler* vb. istatistikleri gösterildi.**
 
 🎥 **Google chart grafikleri kullanılarak çeşitli istatistikler gösterildi.**
 
