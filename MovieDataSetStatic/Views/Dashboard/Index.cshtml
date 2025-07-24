@@ -1,0 +1,277 @@
+@using System.Linq
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<style>
+    .dashboard-main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    .dashboard-card, .dashboard-highlight {
+        border-radius: 18px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+        padding: 2rem 2.5rem;
+        margin: 0;
+        background: #f8fafd;
+        min-height: 350px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .dashboard-blue { background: #A7C7E7; grid-row: 1 / 2; grid-column: 1 / 2; height: 100%; }
+    .dashboard-pink { background: #FFB6B6; grid-row: 1 / 2; grid-column: 2 / 3; height: 100%; }
+    .dashboard-yellow { background: #FFFACD; grid-row: 2 / 3; grid-column: 1 / 2; height: 100%; }
+    .dashboard-green { background: #B5EAD7; grid-row: 2 / 3; grid-column: 2 / 3; height: 100%; }
+    media (max-width: 900px) {
+        .dashboard-main-grid {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto auto auto;
+        }
+        .dashboard-blue, .dashboard-pink, .dashboard-yellow, .dashboard-green {
+            height: auto;
+            min-height: unset;
+        }
+    }
+    .dashboard-yellow, .dashboard-green {
+        min-height: 120px;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .dashboard-graphs-row {
+        display: flex;
+        gap: 2rem;
+        margin-top: 0.5rem;
+    }
+    .dashboard-title {
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+    .dashboard-emoji {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        width: 100%;
+        display: block;
+    }
+</style>
+
+@functions {
+    string GetGenreColor(string genre)
+    {
+        return genre switch
+        {
+            "Action" => "#e74c3c",
+            "Drama" => "#e67e22",
+            "Science Fiction" => "#3498db",
+            "Adventure" => "#27ae60",
+            "Comedy" => "#f1c40f",
+            "Thriller" => "#9b59b6",
+            "Crime" => "#7f8c8d",
+            "Fantasy" => "#fd79a8",
+            "Mystery" => "#2980b9",
+            "Animation" => "#00b894",
+            "Horror" => "#2d3436",
+            "Family" => "#a0522d",
+            _ => "#636e72"
+        };
+    }
+    string GetProdColor(string prod)
+    {
+        return prod switch
+        {
+            "Marvel Studios" => "#c0392b",
+            "Warner Bros. Pictures" => "#2980b9",
+            "Legendary Pictures" => "#16a085",
+            "Syncopy" => "#8e44ad",
+            "20th Century Fox" => "#e67e22",
+            _ => "#636e72"
+        };
+    }
+}
+
+<div class="dashboard-main-grid">
+    <div class="dashboard-card dashboard-blue">
+        <div class="dashboard-emoji">🏅</div>
+        <div class="dashboard-title">En Yüksek Puanlı 5 Film</div>
+        <ul class="dashboard-list">
+            @foreach (var movie in (IEnumerable<dynamic>)ViewBag.Top5Movies)
+            {
+                <li>
+                    <b>@movie.Title</b> <br />
+                    <span style="font-size:0.95em;color:#666;">Tür: @movie.Genres</span><br />
+                    <span style="font-size:0.95em;color:#888;">Konu: @movie.Overview</span>
+                </li>
+                <hr />
+            }
+        </ul>
+    </div>
+    <div class="dashboard-card dashboard-pink">
+        <div class="dashboard-emoji">🎭</div>
+        <div class="dashboard-title">Türlere Göre Film Sayısı</div>
+        <ul class="dashboard-list">
+            @foreach (var genre in (IDictionary<string, int>)ViewBag.GenresCount)
+            {
+                <li>@genre.Key: <b>@genre.Value</b></li>
+            }
+        </ul>
+    </div>
+    <div class="dashboard-highlight dashboard-yellow">
+        <div class="dashboard-emoji">🏆</div>
+        <div class="dashboard-title">En Yüksek Puanlı 100 Filmde En Çok Hangi Tür Var?</div>
+        <div class="dashboard-value">@ViewBag.Top100Genre</div>
+    </div>
+    <div class="dashboard-card dashboard-green">
+        <div class="dashboard-emoji">🏢</div>
+        <div class="dashboard-title">Prodüksiyonlara Göre Film Sayısı</div>
+        <ul class="dashboard-list">
+            @foreach (var prod in ((IDictionary<string, int>)ViewBag.ProductionCount).Take(5))
+            {
+                <li>@prod.Key: <b>@prod.Value</b></li>
+            }
+        </ul>
+        <span style="font-size:0.9rem;color:#888;">(En çok 5 gösteriliyor)</span>
+    </div>
+</div>
+
+<!-- Grafikler aşağıda aynı şekilde kalabilir -->
+<div class="dashboard-graphs-row" style="display:flex;gap:2rem;margin-top:0.5rem;">
+    <div class="dashboard-graph" style="flex:1;min-width:0;background:#f8fafd;">
+        <canvas id="prodBarChart"></canvas>
+    </div>
+    <div class="dashboard-graph" style="flex:1;min-width:0;background:#f8fafd;">
+        <canvas id="ratingPieChart"></canvas>
+    </div>
+    <div class="dashboard-graph" style="flex:1;min-width:0;background:#f8fafd;">
+        <canvas id="genreBarChart"></canvas>
+    </div>
+</div>
+
+<hr />
+<div class="dashboard-table-container" style="margin: 2rem 0;">
+    <h3 style="font-weight:bold; margin-bottom:1rem;">🎞️ Film Listesi</h3>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle" style="background:#fff; border-radius:12px; overflow:hidden;">
+            <thead class="table-light">
+                <tr>
+                    <th>Film Adı</th>
+                    <th>Tür(ler)i</th>
+                    <th>Ortalama Puan</th>
+                    <th>Yapım Şirket(ler)i</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var movie in (IEnumerable<dynamic>)ViewBag.PagedMovies)
+                {
+                    <tr>
+                        <td style="font-weight:600;">@movie.Title</td>
+                        <td>
+                            @foreach(var genre in (IEnumerable<string>)movie.Genres)
+                            {
+                                <span class="badge" style="margin-right:3px; background-color:@GetGenreColor(genre); color:#fff;">@genre</span>
+                            }
+                        </td>
+                        <td style="text-align:center;">@movie.VoteAverage</td>
+                        <td>
+                            @foreach(var prod in (IEnumerable<string>)movie.Productions)
+                            {
+                                <span class="badge" style="margin-right:3px; background-color:@GetProdColor(prod); color:#fff;">@prod</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <span>Sayfa @ViewBag.CurrentPage / @ViewBag.TotalPages</span>
+        </div>
+        <div>
+            <nav>
+                <ul class="pagination mb-0">
+                    <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1 })">&laquo; Geri</a>
+                    </li>
+                    <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1 })">İleri &raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Prodüksiyon Bar Chart
+        const prodLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(((IDictionary<string, int>)ViewBag.Top10Productions).Keys));
+        const prodData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(((IDictionary<string, int>)ViewBag.Top10Productions).Values));
+        new Chart(document.getElementById('prodBarChart'), {
+            type: 'bar',
+            data: {
+                labels: prodLabels,
+                datasets: [{
+                    label: 'Film Sayısı',
+                    data: prodData,
+                    backgroundColor: [
+                        '#A7C7E7', '#F7CAC9', '#B5EAD7', '#FFFACD', '#FFDAC1', '#E2F0CB', '#CBAACB', '#FFD6E0', '#B5B9FF', '#B8FFF9'
+                    ],
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false }, title: { display: true, text: 'En Çok Filme Sahip 5 Prodüksiyon Şirketi' } },
+                responsive: true,
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+
+        // Puan Dağılımı Pie Chart
+        const ratingLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(((IEnumerable<dynamic>)ViewBag.RatingDistribution).Select(x => x.Range)));
+        const ratingData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(((IEnumerable<dynamic>)ViewBag.RatingDistribution).Select(x => x.Count)));
+        new Chart(document.getElementById('ratingPieChart'), {
+            type: 'pie',
+            data: {
+                labels: ratingLabels,
+                datasets: [{
+                    label: 'Film Sayısı',
+                    data: ratingData,
+                    backgroundColor: [
+                        '#A7C7E7', '#F7CAC9', '#B5EAD7', '#FFFACD', '#FFDAC1'
+                    ],
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Puan Aralıklarına Göre Film Dağılımı' } },
+                responsive: true
+            }
+        });
+
+        // Türlere Göre Ortalama Puan Bar Chart
+        const genreLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(((IDictionary<string, double>)ViewBag.GenreAverages).Keys));
+        const genreData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(((IDictionary<string, double>)ViewBag.GenreAverages).Values));
+        new Chart(document.getElementById('genreBarChart'), {
+            type: 'bar',
+            data: {
+                labels: genreLabels,
+                datasets: [{
+                    label: 'Ortalama Puan',
+                    data: genreData,
+                    backgroundColor: '#B5EAD7',
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false }, title: { display: true, text: 'Türlere Göre Ortalama Puan' } },
+                responsive: true,
+                scales: { y: { beginAtZero: true, max: 10, ticks: { stepSize: 1 } } }
+            }
+        });
+    </script>
+} 

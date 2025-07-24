@@ -1,0 +1,26 @@
+﻿@model List<MovieDataSetStatic.Dtos.MoviesDataDto.ResultMoviesDataDto>
+@{
+    Layout = null;
+}
+
+<div class="container">
+    <br />
+    <table class="table table-bordered">
+        <tr>
+            <th>#</th>
+            <th>Film Adı</th>
+            <th>Film Türü</th>
+            <th>Prodüksiyon</th>
+        </tr>
+        @foreach(var item in Model)
+        {
+            <tr>
+                <td>@item.id</td>
+                <td>@item.original_title</td>
+                <td>@item.spoken_languages</td>
+                <td>@item.production_companies</td>
+                
+            </tr>
+        }
+    </table>
+</div>
